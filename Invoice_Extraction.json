@@ -1,0 +1,730 @@
+{
+  "name": "Invoice Extraction",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1504,
+        176
+      ],
+      "id": "111a7af8-e81d-4a8b-a982-3a98c6b3f7b1",
+      "name": "Download Invoice File",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "x7Qp2RtY9WkLmNa3",
+          "name": "Google Drive account (YOUR CREDENTIAL)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.text }}",
+        "schemaType": "manual",
+        "inputSchema": {
+          "values": {
+            "attributes": [
+              {
+                "name": "invoiceNumber",
+                "description": "The invoice number or ID",
+                "required": true
+              },
+              {
+                "name": "vendorName",
+                "description": "The name of the vendor or company issuing the invoice",
+                "required": true
+              },
+              {
+                "name": "invoiceDate",
+                "description": "The date the invoice was issued, formatted YYYY-MM-DD",
+                "required": false
+              },
+              {
+                "name": "dueDate",
+                "description": "The payment due date, formatted YYYY-MM-DD",
+                "required": false
+              },
+              {
+                "name": "subtotal",
+                "description": "The subtotal before tax, as a number without currency symbols",
+                "required": false
+              },
+              {
+                "name": "taxAmount",
+                "description": "The tax amount, as a number without currency symbols",
+                "required": false
+              },
+              {
+                "name": "totalAmount",
+                "description": "The total amount due on the invoice, as a number without currency symbols",
+                "required": true
+              },
+              {
+                "name": "currency",
+                "description": "The currency of the invoice, e.g. USD, INR, EUR",
+                "required": false
+              },
+              {
+                "name": "lineItems",
+                "description": "List of invoice line items. For each item extract description, quantity, unit price, and line total.",
+                "required": false
+              }
+            ]
+          }
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1,
+      "position": [
+        -752,
+        160
+      ],
+      "id": "8e39ea94-75a7-4065-abb4-3f442442fe1f",
+      "name": "Parse Invoice Fields"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_FOLDER_ID",
+          "mode": "list",
+          "cachedResultName": "invoice ",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/REPLACE_WITH_YOUR_FOLDER_ID"
+        },
+        "event": "fileUpdated",
+        "options": {
+          "fileType": "all"
+        }
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1680,
+        176
+      ],
+      "id": "a2c7bb9d-61d6-417b-a0f1-358f63689dad",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "x7Qp2RtY9WkLmNa3",
+          "name": "Google Drive account (YOUR CREDENTIAL)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "includeMetadata": false
+        }
+      },
+      "type": "n8n-nodes-extract-monster.extractMonster",
+      "typeVersion": 1,
+      "position": [
+        -1024,
+        80
+      ],
+      "id": "f5ff46b2-5e09-4e56-abfd-e1fe25d28219",
+      "name": "Extract Monster",
+      "credentials": {
+        "extractMonsterApi": {
+          "id": "z4Hj8VcB1UqXeRt5",
+          "name": "Extract Monster account (YOUR CREDENTIAL)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1024,
+        272
+      ],
+      "id": "a0c43fb3-2d1a-480b-a9be-1c5deffbbe6a",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "be8c131f-551a-4c14-9b5d-392a1810f288",
+              "leftValue": "pdf",
+              "rightValue": "pdf",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1360,
+        176
+      ],
+      "id": "4777ee48-899c-4da7-89d8-09e3f4a1680f",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -752,
+        352
+      ],
+      "id": "184a9227-5328-439a-98f5-417df0b542bd",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "p9Kd3FnT6MsYbLo2",
+          "name": "OpenAI account (YOUR CREDENTIAL)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const data = $input.item.json.output ?? $input.item.json;\n\nconst requiredFields = {\n  invoiceNumber: data.invoiceNumber,\n  vendorName: data.vendorName,\n  totalAmount: data.totalAmount\n};\n\nconst missingFields = [];\n\nfor (const [fieldName, value] of Object.entries(requiredFields)) {\n  if (value === null || value === undefined || value === '') {\n    missingFields.push(fieldName);\n  }\n}\n\nreturn {\n  json: {\n    ...data,\n    isValid: missingFields.length === 0,\n    missingFields\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        160
+      ],
+      "id": "5a3d04ab-6cd8-42f1-97ca-22b23eb84c62",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "invoice-valid-condition",
+              "leftValue": "={{ $json.isValid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "name": "filter.operator.true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -240,
+        160
+      ],
+      "id": "afb230fb-f5d7-4e5b-94d0-66a28adc0217",
+      "name": "IF - Is Valid?"
+    },
+    {
+      "parameters": {
+        "sendTo": "REPLACE_WITH_YOUR_EMAIL",
+        "subject": "Invoice Needs Review - Invalid Data",
+        "emailType": "text",
+        "message": "An invoice could not be processed automatically.\n\nInvoice Number: {{ $json.invoiceNumber || 'Missing' }}\nVendor: {{ $json.vendorName || 'Missing' }}\nTotal: {{ $json.totalAmount || 'Missing' }}\nMissing Fields: {{ ($json.missingFields || []).join(', ') }}\n\nPlease review the original invoice manually.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "598062b2-3209-4f2b-b344-aba579b3d823",
+      "name": "Needs Review - Invalid Invoice",
+      "webhookId": "430ac6cf-bce6-476c-974d-3dece4407f46"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) AS duplicate_count\nFROM invoices\nWHERE invoice_number = '{{ $json.invoiceNumber }}'\n  AND vendor_name = '{{ $json.vendorName }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        0,
+        240
+      ],
+      "id": "c0fa1aea-1834-47c3-8afa-01bf5c608141",
+      "name": "MySQL - Check Duplicate",
+      "credentials": {
+        "mySql": {
+          "id": "q1Ws5XcV8DtRfNm4",
+          "name": "MySQL account (YOUR CREDENTIAL)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "invoice-duplicate-condition",
+              "leftValue": "={{ Number($json.duplicate_count || 0) }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt",
+                "name": "filter.operator.gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        240,
+        240
+      ],
+      "id": "6e5aef45-e3a7-4ca6-8f99-c44f354b91ba",
+      "name": "IF - Duplicate?"
+    },
+    {
+      "parameters": {
+        "sendTo": "REPLACE_WITH_YOUR_EMAIL",
+        "subject": "Duplicate Invoice Detected",
+        "emailType": "text",
+        "message": "Duplicate invoice detected.\n\nInvoice Number: {{ $('Code in JavaScript').item.json.invoiceNumber }}\nVendor: {{ $('Code in JavaScript').item.json.vendorName }}\n\nThe invoice was not inserted again.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        80
+      ],
+      "id": "fa5e4f33-7d52-4a88-9024-3cf87f6ac92b",
+      "name": "Duplicate Detected Notification",
+      "webhookId": "7fb96141-5377-40e4-95c2-4a4ea0c03560"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const data = $json;\nconst lineItems = Array.isArray(data.lineItems) ? data.lineItems : [];\n\nconst calculatedSubtotal = lineItems.reduce((sum, item) => {\n  const lineTotal = Number(item.lineTotal ?? (Number(item.quantity || 0) * Number(item.unitPrice || 0)));\n  return sum + (Number.isFinite(lineTotal) ? lineTotal : 0);\n}, 0);\n\nconst extractedSubtotal = Number(data.subtotal || 0);\nconst extractedTotal = Number(data.totalAmount || 0);\nconst taxAmount = Number(data.taxAmount || 0);\n\nconst subtotalMatches = Math.abs(calculatedSubtotal - extractedSubtotal) < 0.01;\nconst calculatedTotal = calculatedSubtotal + taxAmount;\nconst totalMatches = Math.abs(calculatedTotal - extractedTotal) < 0.01;\n\nreturn {\n  json: {\n    ...data,\n    calculatedSubtotal: Number(calculatedSubtotal.toFixed(2)),\n    calculatedTotal: Number(calculatedTotal.toFixed(2)),\n    subtotalMatches,\n    totalMatches,\n    isVerified: subtotalMatches && totalMatches\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        304
+      ],
+      "id": "c043504b-d743-4d1d-9fcd-13ddd6d07a9d",
+      "name": "Code - Verify Invoice Totals"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "invoice-verified-condition",
+              "leftValue": "={{ $json.isVerified }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "name": "filter.operator.true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        720,
+        304
+      ],
+      "id": "c4fd9d07-c9f2-4c77-889d-b771acb5b535",
+      "name": "IF - Verified?"
+    },
+    {
+      "parameters": {
+        "sendTo": "REPLACE_WITH_YOUR_EMAIL",
+        "subject": "Invoice Needs Review - Total Mismatch",
+        "emailType": "text",
+        "message": "Invoice total verification failed.\n\nInvoice Number: {{ $json.invoiceNumber }}\nVendor: {{ $json.vendorName }}\n\nExtracted Subtotal: {{ $json.subtotal }}\nCalculated Subtotal: {{ $json.calculatedSubtotal }}\n\nExtracted Total: {{ $json.totalAmount }}\nCalculated Total: {{ $json.calculatedTotal }}\n\nThe invoice was not saved because the totals did not match.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        960,
+        160
+      ],
+      "id": "b1b11c68-4623-4dd0-972f-d7db50a7b450",
+      "name": "Needs Review - Total Mismatch",
+      "webhookId": "8360970a-f853-4edc-b8a8-74c0db475e54"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO invoices\n(invoice_number, vendor_name, invoice_date, due_date, subtotal, tax_amount, total_amount, currency, source_file_id)\nVALUES\n(\n  '{{ $json.invoiceNumber }}',\n  '{{ $json.vendorName }}',\n  {{ $json.invoiceDate ? \"'\" + $json.invoiceDate + \"'\" : \"NULL\" }},\n  {{ $json.dueDate ? \"'\" + $json.dueDate + \"'\" : \"NULL\" }},\n  {{ $json.subtotal ?? \"NULL\" }},\n  {{ $json.taxAmount ?? \"NULL\" }},\n  {{ $json.totalAmount }},\n  '{{ $json.currency || \"USD\" }}',\n  '{{ $(\"Google Drive Trigger\").item.json.id }}'\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        960,
+        384
+      ],
+      "id": "2d4f9654-c125-44a6-811a-518e82ea6a5d",
+      "name": "MySQL - Insert Invoice",
+      "credentials": {
+        "mySql": {
+          "id": "q1Ws5XcV8DtRfNm4",
+          "name": "MySQL account (YOUR CREDENTIAL)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Google Drive Trigger').item.json.id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_PROCESSED_FOLDER_ID",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1200,
+        384
+      ],
+      "id": "3f52f8e0-4631-4c77-be9b-ae7dd7c09aeb",
+      "name": "Google Drive - Move to Processed",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "x7Qp2RtY9WkLmNa3",
+          "name": "Google Drive account (YOUR CREDENTIAL)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "REPLACE_WITH_YOUR_EMAIL",
+        "subject": "Invoice Saved Successfully - {{ $json.invoiceNumber }}",
+        "emailType": "text",
+        "message": "Invoice successfully processed and saved.\n\nVendor: {{ $json.vendorName }}\nInvoice Number: {{ $json.invoiceNumber }}\nAmount: {{ $json.currency || 'USD' }} {{ $json.totalAmount }}\nDue Date: {{ $json.dueDate || 'Not provided' }}\n\nVerification: PASSED\nDatabase: MySQL\nStatus: Saved\nFile: Moved to Processed",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1440,
+        384
+      ],
+      "id": "16ee4d5a-c222-4023-b82f-6d4666801240",
+      "name": "Gmail - Invoice Saved",
+      "webhookId": "e7282118-8d6a-4420-b54a-dac97edbe153",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "j6Yb2GhP4LwQzTa9",
+          "name": "Gmail account (YOUR CREDENTIAL)"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Download Invoice File": {
+      "main": [
+        [
+          {
+            "node": "Extract Monster",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download Invoice File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Monster": {
+      "main": [
+        [
+          {
+            "node": "Parse Invoice Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Parse Invoice Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Monster",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Parse Invoice Fields",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Invoice Fields": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "IF - Is Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Is Valid?": {
+      "main": [
+        [
+          {
+            "node": "MySQL - Check Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Needs Review - Invalid Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MySQL - Check Duplicate": {
+      "main": [
+        [
+          {
+            "node": "IF - Duplicate?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Duplicate?": {
+      "main": [
+        [
+          {
+            "node": "Duplicate Detected Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code - Verify Invoice Totals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Verify Invoice Totals": {
+      "main": [
+        [
+          {
+            "node": "IF - Verified?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Verified?": {
+      "main": [
+        [
+          {
+            "node": "MySQL - Insert Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Needs Review - Total Mismatch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MySQL - Insert Invoice": {
+      "main": [
+        [
+          {
+            "node": "Google Drive - Move to Processed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive - Move to Processed": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Invoice Saved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f29f0e4b-687e-4cf3-a254-ed71d1b499bc",
+  "meta": {
+    "instanceId": "d5b4c233b637728857a1e96b3e8f42476b0518fd6ee6646e23196f1bfd0831fc"
+  },
+  "nodeGroups": [],
+  "id": "UEsPbCIE9jFg64sX",
+  "tags": []
+}
