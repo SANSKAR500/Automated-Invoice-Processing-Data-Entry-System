@@ -2,7 +2,7 @@
 
 An automated ETL pipeline built in **n8n** that watches a Gmail inbox for incoming CSV attachments, cleans the data using a **Python** script (deduplication, type-casting, null/invalid-row handling), loads the cleaned records into a **Supabase (Postgres)** database and a **Google Sheet**, and emails back a confirmation with the cleaned file attached — or an alert if nothing survived cleaning.
 
-![Pipeline Architecture](assets/pipeline-animated.svg)
+![Pipeline Architecture](workflow-screenshot.png)
 
 > Open `assets/interactive-pipeline.html` in a browser for the interactive version: hover a node to trace its connections, click one for a plain-English explanation, or pause the flow.
 
